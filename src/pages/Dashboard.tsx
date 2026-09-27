@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, type Framework, type ComplianceTask, type RiskAssessment, type AuditLog } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { seedInitialDataIfNeeded } from '../lib/seed'
 import PageHeader from '../components/PageHeader'
 import StatusBadge from '../components/StatusBadge'
 import { Shield, SquareCheck as CheckSquare, TriangleAlert as AlertTriangle, FileText, TrendingUp, Clock, ArrowUpRight, Activity } from 'lucide-react'
@@ -29,6 +30,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function loadData() {
+      if (user) {
+        await seedInitialDataIfNeeded(user.id)
+      }
       const [fw, tk, rk, lg] = await Promise.all([
         supabase.from('frameworks').select('*').order('created_at', { ascending: false }),
         supabase.from('compliance_tasks').select('*').order('created_at', { ascending: false }),
@@ -42,7 +46,7 @@ export default function Dashboard() {
       setLoading(false)
     }
     loadData()
-  }, [])
+  }, [user])
 
   const activeFrameworks = frameworks.filter((f) => f.status === 'active').length
   const completedTasks = tasks.filter((t) => t.status === 'completed').length
